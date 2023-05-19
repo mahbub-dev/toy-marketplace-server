@@ -6,7 +6,7 @@ const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json(), express.urlencoded({ extended: true }));
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = process.env.MONGO_URI;
@@ -26,50 +26,81 @@ async function run() {
 
 		// home data process
 		app.get("/home", async (req, res) => {
-			const shop_category = await db
-				.collection("shop-category")
-				.find()
-				.toArray();
-			const galary = await db.collection("galary").find().toArray();
-			res.send({ galary: galary[0].images, shop_category });
+			try {
+				const shop_category = await db
+					.collection("shop-category")
+					.find()
+					.toArray();
+				const galary = await db.collection("galary").find().toArray();
+				res.send({ galary: galary[0].images, shop_category });
+			} catch (error) {
+				console.log(error);
+				res.send(error);
+			}
 		});
 
 		app.get("/all_toys", async (req, res) => {
-			const query = req.query.toy_name;
-			if (query) {
+			try {
+				const query = req.query.toy_name;
+				if (query) {
+					const data = await db
+						.collection("all-toys")
+						.find({ toyName: { $regex: query, $options: "i" } })
+						.limit(20)
+						.toArray();
+					res.send(data);
+					return;
+				}
 				const data = await db
 					.collection("all-toys")
-					.find({ "toy name": { $regex: query, $options: "i" } })
+					.find()
 					.limit(20)
 					.toArray();
 				res.send(data);
-				return;
+			} catch (error) {
+				console.log(error);
+				res.send(error);
 			}
-			const data = await db
-				.collection("all-toys")
-				.find()
-				.limit(20)
-				.toArray();
-			res.send(data);
+		});
+		app.get("/toy/:id", async (req, res) => {
+			try {
+				const data = await db
+					.collection("all-toys")
+					.findOne({ _id: new ObjectId(req.params.id.toString()) });
+				res.send(data);
+			} catch (error) {
+				console.log(error);
+				res.send(error);
+			}
 		});
 
-		app.post("/productsByIds", async (req, res) => {
-			const ids = req.body;
-			const objectIds = ids.map((id) => new ObjectId(id));
-			const query = { _id: { $in: objectIds } };
-			console.log(ids);
-			const result = await productCollection.find(query).toArray();
-			res.send(result);
+		// add toy
+		app.post("/add_toy", async (req, res) => {
+			try {
+				const insertedData = await db
+					.collection("mytoy")
+					.insertOne(req.body);
+				res.send(insertedData);
+			} catch (error) {
+				console.log(error);
+				res.send(error);
+			}
+		});
+		app.get("/mytoy", async (req, res) => {
+			try {
+				const mytoys = await db.collection("mytoy").find().toArray();
+				res.send(mytoys);
+			} catch (error) {
+				console.log(error);
+				res.send(error);
+			}
 		});
 
 		// Send a ping to confirm a successful connection
 		await client.db("admin").command({ ping: 1 });
-		console.log(
-			"Pinged your deployment. You successfully connected to MongoDB!"
-		);
+		console.log("Successfully connected to MongoDB!");
 	} finally {
-		// Ensures that the client will close when you finish/error
-		// await client.close();
+	
 	}
 }
 run().catch(console.dir);
