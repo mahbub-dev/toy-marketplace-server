@@ -24,6 +24,7 @@ async function run() {
 		await client.connect();
 		const db = client.db("toy_marketplace");
 
+		// home data process
 		app.get("/home", async (req, res) => {
 			const shop_category = await db
 				.collection("shop-category")
@@ -33,9 +34,23 @@ async function run() {
 			res.send({ galary: galary[0].images, shop_category });
 		});
 
-		app.get("/totalProducts", async (req, res) => {
-			const result = await productCollection.estimatedDocumentCount();
-			res.send({ totalProducts: result });
+		app.get("/all_toys", async (req, res) => {
+			const query = req.query.toy_name;
+			if (query) {
+				const data = await db
+					.collection("all-toys")
+					.find({ "toy name": { $regex: query, $options: "i" } })
+					.limit(20)
+					.toArray();
+				res.send(data);
+				return;
+			}
+			const data = await db
+				.collection("all-toys")
+				.find()
+				.limit(20)
+				.toArray();
+			res.send(data);
 		});
 
 		app.post("/productsByIds", async (req, res) => {
