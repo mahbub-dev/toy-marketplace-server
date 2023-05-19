@@ -86,6 +86,37 @@ async function run() {
 				res.send(error);
 			}
 		});
+		// update my toy
+		app.put("/mytoy", async (req, res) => {
+			const { _id, ...rest } = req.body;
+			try {
+				await db
+					.collection("mytoy")
+					.updateOne({ _id: new ObjectId(_id) }, { $set: rest });
+
+				const data = await db
+					.collection("mytoy")
+					.findOne({ _id: new ObjectId(_id) });
+				res.send(data);
+			} catch (error) {
+				console.log(error);
+				res.send(error);
+			}
+		});
+
+		// delete mytoy
+		app.delete("/mytoy/:id", async (req, res) => {
+			try {
+				const deleteItem = await db
+					.collection("mytoy")
+					.deleteOne({ _id: new ObjectId(req.params.id) });
+				res.send(deleteItem);
+			} catch (error) {
+				console.log(error);
+				res.send(error);
+			}
+		});
+		// get my toy
 		app.get("/mytoy", async (req, res) => {
 			try {
 				const mytoys = await db.collection("mytoy").find().toArray();
@@ -100,7 +131,6 @@ async function run() {
 		await client.db("admin").command({ ping: 1 });
 		console.log("Successfully connected to MongoDB!");
 	} finally {
-	
 	}
 }
 run().catch(console.dir);
