@@ -73,6 +73,7 @@ async function run() {
 			}
 		});
 
+		// data process for all toys page
 		app.get("/all_toys", async (req, res) => {
 			try {
 				const query = req.query.toy_name;
@@ -96,6 +97,8 @@ async function run() {
 				res.send(error);
 			}
 		});
+
+		// data process for single toy page
 		app.get("/toy/:id", async (req, res) => {
 			try {
 				const data = await db
@@ -108,6 +111,7 @@ async function run() {
 			}
 		});
 
+		// data process for my toys
 		// add toy
 		app.post("/add_toy", async (req, res) => {
 			try {
@@ -153,7 +157,12 @@ async function run() {
 		// get my toy
 		app.get("/mytoy", async (req, res) => {
 			try {
-				const mytoys = await db.collection("mytoy").find().toArray();
+				const query = req.query?.sort || 1;
+				const mytoys = await db
+					.collection("mytoy")
+					.find()
+					.sort({ price: Number(query) })
+					.toArray();
 				res.send(mytoys);
 			} catch (error) {
 				console.log(error);
