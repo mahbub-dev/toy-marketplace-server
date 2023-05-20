@@ -6,7 +6,7 @@
 	"scripts": {
 		"start": "nodemon index.js"
 	},
-	"author": "\"Md Mahbub Alom\"",
+	"author": "Md Mahbub Alom",
 	"license": "ISC",
 	"dependencies": {
 		"cors": "^2.8.5",
