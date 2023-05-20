@@ -21,18 +21,52 @@ const client = new MongoClient(uri, {
 
 async function run() {
 	try {
-		await client.connect();
+		client.connect();
 		const db = client.db("toy_marketplace");
 
 		// home data process
 		app.get("/home", async (req, res) => {
 			try {
 				const shop_category = await db
-					.collection("shop-category")
+					.collection("all-toys")
 					.find()
 					.toArray();
+
+				// preparing data for shop category
+				const data = shop_category.map((category, ind, array) => {
+					return {
+						_id: category._id,
+						title: category.subCategory,
+						toys: array
+							.map((toy) => {
+								return {
+									_id: toy._id,
+									name: toy.toyName,
+									price: toy.price,
+									rating: toy.rating,
+									image: toy.picture,
+									subCategory: toy.subCategory,
+								};
+							})
+							.filter(
+								(f) => f.subCategory === category.subCategory
+							),
+					};
+				});
+				const uniqueArray = [];
+				const titlesSet = new Set();
+				for (const item of data) {
+					if (!titlesSet.has(item.title)) {
+						uniqueArray.push(item);
+						titlesSet.add(item.title);
+					}
+				}
+
 				const galary = await db.collection("galary").find().toArray();
-				res.send({ galary: galary[0].images, shop_category });
+				res.send({
+					galary: shop_category.map((i) => i.picture),
+					shop_category: uniqueArray.splice(1, 3),
+				});
 			} catch (error) {
 				console.log(error);
 				res.send(error);
