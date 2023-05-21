@@ -155,12 +155,12 @@ async function run() {
 			}
 		});
 		// get my toy
-		app.get("/mytoy", async (req, res) => {
+		app.get("/mytoy/:email", async (req, res) => {
 			try {
 				const query = req.query?.sort || 1;
 				const mytoys = await db
 					.collection("mytoy")
-					.find()
+					.find({ sellerEmail: req.params.email })
 					.sort({ price: Number(query) })
 					.toArray();
 				res.send(mytoys);
